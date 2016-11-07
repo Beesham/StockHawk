@@ -14,4 +14,7 @@
   <!-- Stock doesnt exists error -->
   <string name="stock_no_data" translatable="true">Stock does not exist</string>
 
+  <!-- Content description for fab -->
+  <string name="content_description_fab">Add a stock quote</string>
+
 </resources>
