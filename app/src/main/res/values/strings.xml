@@ -10,4 +10,8 @@
   <string name="input_hint">FB</string>
   <string name="input_prefill"></string>
   <string name="network_toast">Uh-oh! This app requires an internet connection</string>
+
+  <!-- Stock doesnt exists error -->
+  <string name="stock_no_data" translatable="true">Stock does not exist</string>
+
 </resources>

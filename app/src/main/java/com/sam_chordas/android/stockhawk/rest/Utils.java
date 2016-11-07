@@ -1,7 +1,12 @@
 package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.ContentProviderOperation;
+import android.content.Context;
+import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
+
+import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
 import java.util.ArrayList;
@@ -30,14 +35,20 @@ public class Utils {
         if (count == 1){
           jsonObject = jsonObject.getJSONObject("results")
               .getJSONObject("quote");
-          batchOperations.add(buildBatchOperation(jsonObject));
+
+          if(!jsonObject.isNull("Name")){
+            batchOperations.add(buildBatchOperation(jsonObject));
+          }
+
         } else{
           resultsArray = jsonObject.getJSONObject("results").getJSONArray("quote");
 
           if (resultsArray != null && resultsArray.length() != 0){
             for (int i = 0; i < resultsArray.length(); i++){
               jsonObject = resultsArray.getJSONObject(i);
-              batchOperations.add(buildBatchOperation(jsonObject));
+              if(!jsonObject.isNull("Name")){
+                batchOperations.add(buildBatchOperation(jsonObject));
+              }
             }
           }
         }
