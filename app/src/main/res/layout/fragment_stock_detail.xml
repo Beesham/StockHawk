@@ -1,0 +1,94 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.sam_chordas.android.stockhawk.ui.StockDetailFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <include layout="@layout/activity_line_graph"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/bid_label_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Bid: " />
+
+            <TextView
+                android:id="@+id/bid_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="3420.52" />
+
+            <TextView
+                android:id="@+id/ask_label_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Ask: " />
+
+            <TextView
+                android:id="@+id/ask_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="3204.52" />
+
+            <TextView
+                android:id="@+id/high_label_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="High: " />
+
+            <TextView
+                android:id="@+id/high_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="3500.52" />
+
+            <TextView
+                android:id="@+id/low_label_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Low: " />
+
+            <TextView
+                android:id="@+id/low_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="3000.52" />
+
+            <TextView
+                android:id="@+id/open_label_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Open: " />
+
+            <TextView
+                android:id="@+id/open_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="3200.52" />
+
+            <TextView
+                android:id="@+id/close_label_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Close: " />
+
+            <TextView
+                android:id="@+id/close_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="3400.52" />
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>
