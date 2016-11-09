@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.graphics.LinearGradient;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
@@ -21,6 +22,8 @@ import com.squareup.okhttp.Response;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+
+import static android.R.attr.format;
 
 /**
  * Created by sam_chordas on 9/30/15.
@@ -51,7 +54,7 @@ public class StockTaskService extends GcmTaskService{
 
   @Override
   public int onRunTask(TaskParams params){
-    Cursor initQueryCursor;
+    Cursor initQueryCursor = null;
     if (mContext == null){
       mContext = this;
     }
@@ -134,7 +137,57 @@ public class StockTaskService extends GcmTaskService{
       }
     }
 
+    queryForHistoricalData(initQueryCursor);
+
     return result;
+  }
+
+  private void queryForHistoricalData(Cursor symbolCursor){
+    StringBuilder urlStringBuilder = new StringBuilder();
+    if(urlStringBuilder != null){
+
+      try {
+        urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
+        urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.historicaldata where symbol in (", "UTF-8"));
+        urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
+        urlStringBuilder.append(URLEncoder.encode(" and startDate = \"2009-09-11\" and endDate = \"2010-03-10\"", "UTF-8"));
+        urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
+                + "org%2Falltableswithkeys&callback=");
+        Log.d(LOG_TAG, "Historical data query: " + urlStringBuilder.toString());
+      } catch (UnsupportedEncodingException e) {
+        e.printStackTrace();
+      }
+
+      String urlString = urlStringBuilder.toString();
+      String getResponse;
+
+      try {
+        getResponse = fetchData(urlString);
+        Utils.quoteHistoricalDataToContentValues(getResponse, symbolCursor);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+
+
+      /*ContentValues contentValues = new ContentValues();
+
+      if(isUpdate){
+        contentValues.put(QuoteColumns.ISCURRENT, 0);
+        mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI, contentValues, null, null);
+      }
+
+      try {
+        mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
+                Utils.quoteJsonToContentVals(getResponse));
+      } catch (RemoteException e) {
+        e.printStackTrace();
+      } catch (OperationApplicationException e) {
+        e.printStackTrace();
+      }*/
+
+
+
+    }
   }
 
 }

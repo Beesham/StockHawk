@@ -1,7 +1,9 @@
 package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.ContentProviderOperation;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
@@ -13,6 +15,8 @@ import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import static android.media.CamcorderProfile.get;
 
 /**
  * Created by sam_chordas on 10/8/15.
@@ -103,4 +107,28 @@ public class Utils {
     }
     return builder.build();
   }
+
+  public static void quoteHistoricalDataToContentValues(String strJSON, Cursor symbolCursor){
+    ArrayList<ContentValues> contentValuesArrayList = new ArrayList<>();
+    Log.d(LOG_TAG, "JSON response: " + strJSON);
+
+    symbolCursor.moveToFirst();
+
+    try {
+      JSONObject historicalDataJSON = new JSONObject(strJSON);
+      JSONArray historicalDataArrayJSON = historicalDataJSON.getJSONObject("query").getJSONObject("results").getJSONArray("quote");
+      for(int i = 0; i < historicalDataArrayJSON.length(); i++){
+        JSONObject ojbJSON = (JSONObject) historicalDataArrayJSON.get(i);
+       // ojbJSON.get("Symbol");
+        if(symbolCursor.getString(symbolCursor.getColumnIndex("symbol")).equals(ojbJSON.getString("Symbol"))) {
+          Log.d(LOG_TAG, "Symbol with compare: " + ojbJSON.getString("Symbol"));
+        }else{
+          symbolCursor.moveToNext();
+        }
+      }
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+  }
+
 }
