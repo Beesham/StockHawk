@@ -22,6 +22,7 @@ import com.squareup.okhttp.Response;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 
 import static android.R.attr.format;
 
@@ -137,20 +138,39 @@ public class StockTaskService extends GcmTaskService{
       }
     }
 
-    queryForHistoricalData(initQueryCursor);
+    ArrayList<String> symbolArrayList = new ArrayList<>();
+    if(!params.getTag().equals("init") && initQueryCursor != null) {
+      initQueryCursor.moveToFirst();
+      do{
+        Log.v(LOG_TAG, "adding symbols to list");
+        symbolArrayList.add(
+                initQueryCursor.getString(
+                        initQueryCursor.getColumnIndex("symbol")));
+      }while(initQueryCursor.moveToNext());
+
+
+      String historicalDataJSONStr = queryForHistoricalData();
+      updateQuotesWithHistoricalData(Utils.quoteHistoricalDataToContentValues(historicalDataJSONStr, symbolArrayList), symbolArrayList);
+    }else if (params.getTag().equals("add")){
+      symbolArrayList.add(params.getExtras().getString("symbol"));
+      String historicalDataJSONStr = queryForHistoricalData(params.getExtras().getString("symbol"));
+      updateQuotesWithHistoricalData(Utils.quoteHistoricalDataToContentValues(historicalDataJSONStr, symbolArrayList), symbolArrayList);
+      Log.v(LOG_TAG, "historical data for stockInput: " + historicalDataJSONStr);
+    }
 
     return result;
   }
 
-  private void queryForHistoricalData(Cursor symbolCursor){
+  private String queryForHistoricalData(){
     StringBuilder urlStringBuilder = new StringBuilder();
+    String getResponse = null;
     if(urlStringBuilder != null){
 
       try {
         urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
         urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.historicaldata where symbol in (", "UTF-8"));
         urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
-        urlStringBuilder.append(URLEncoder.encode(" and startDate = \"2009-09-11\" and endDate = \"2010-03-10\"", "UTF-8"));
+        urlStringBuilder.append(URLEncoder.encode(" and startDate = \"2016-11-01\" and endDate = \"2016-11-30\"", "UTF-8"));  //TODO: change dates
         urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
                 + "org%2Falltableswithkeys&callback=");
         Log.d(LOG_TAG, "Historical data query: " + urlStringBuilder.toString());
@@ -159,35 +179,56 @@ public class StockTaskService extends GcmTaskService{
       }
 
       String urlString = urlStringBuilder.toString();
-      String getResponse;
-
       try {
         getResponse = fetchData(urlString);
-        Utils.quoteHistoricalDataToContentValues(getResponse, symbolCursor);
       } catch (IOException e) {
         e.printStackTrace();
       }
+    }
+    return getResponse;
+  }
 
-
-      /*ContentValues contentValues = new ContentValues();
-
-      if(isUpdate){
-        contentValues.put(QuoteColumns.ISCURRENT, 0);
-        mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI, contentValues, null, null);
-      }
+  private String queryForHistoricalData(String stockInput){
+    StringBuilder urlStringBuilder = new StringBuilder();
+    String getResponse = null;
+    if(urlStringBuilder != null){
 
       try {
-        mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
-                Utils.quoteJsonToContentVals(getResponse));
-      } catch (RemoteException e) {
+        urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
+        urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.historicaldata where symbol in (", "UTF-8"));
+//        urlStringBuilder.append(URLEncoder.encode(stockInput.toString(), "UTF-8"));
+        urlStringBuilder.append(URLEncoder.encode("\""+stockInput+"\")", "UTF-8"));
+        Log.v(LOG_TAG, "stockInput: " + stockInput.toString());
+        urlStringBuilder.append(URLEncoder.encode(" and startDate = \"2009-09-11\" and endDate = \"2010-03-10\"", "UTF-8"));  //TODO: change dates
+        urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
+                + "org%2Falltableswithkeys&callback=");
+        Log.d(LOG_TAG, "Historical data query: " + urlStringBuilder.toString());
+      } catch (UnsupportedEncodingException e) {
         e.printStackTrace();
-      } catch (OperationApplicationException e) {
+      }
+
+      String urlString = urlStringBuilder.toString();
+      try {
+        getResponse = fetchData(urlString);
+      } catch (IOException e) {
         e.printStackTrace();
-      }*/
+      }
+    }
+    return getResponse;
+  }
 
-
-
+  private void updateQuotesWithHistoricalData(ArrayList<ContentValues> contentValuesArrayList, ArrayList<String> symbolArrayList){
+    Log.v(LOG_TAG, "Updating quotes with historical data, size of contentVlas" + contentValuesArrayList.size());
+    int i = 0;
+    for(ContentValues values : contentValuesArrayList) {
+      Log.v(LOG_TAG, "index: " + i);
+      mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI,
+              values,
+              QuoteColumns.SYMBOL + "=?",
+              new String[]{symbolArrayList.get(i)}); //Where symbol like symbol stored
+      i++;
     }
   }
+
 
 }

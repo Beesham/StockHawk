@@ -25,6 +25,6 @@ public class QuoteColumns {
   public static final String ISUP = "is_up";
   @DataType(DataType.Type.INTEGER) @NotNull
   public static final String ISCURRENT = "is_current";
-  @DataType(DataType.Type.TEXT) @NotNull
+  @DataType(DataType.Type.TEXT)
   public static final String HISTORICALDATA = "historical_data";
 }

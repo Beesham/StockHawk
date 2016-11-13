@@ -4,7 +4,7 @@
     android:layout_height="0dp"
     android:layout_weight="1">
 
-    <com.db.chart.view.LineChartView
+    <com.github.mikephil.charting.charts.LineChart
         xmlns:chart="http://schemas.android.com/apk/res-auto"
         android:id="@+id/linechart"
         android:layout_width="match_parent"

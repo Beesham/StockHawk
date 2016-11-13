@@ -108,27 +108,40 @@ public class Utils {
     return builder.build();
   }
 
-  public static void quoteHistoricalDataToContentValues(String strJSON, Cursor symbolCursor){
+  public static ArrayList<ContentValues> quoteHistoricalDataToContentValues(String strJSON, ArrayList<String> symbolArrayList){
     ArrayList<ContentValues> contentValuesArrayList = new ArrayList<>();
-    Log.d(LOG_TAG, "JSON response: " + strJSON);
-
-    symbolCursor.moveToFirst();
-
+    JSONArray newHistoricalDataJSONArray = new JSONArray();
     try {
       JSONObject historicalDataJSON = new JSONObject(strJSON);
       JSONArray historicalDataArrayJSON = historicalDataJSON.getJSONObject("query").getJSONObject("results").getJSONArray("quote");
-      for(int i = 0; i < historicalDataArrayJSON.length(); i++){
-        JSONObject ojbJSON = (JSONObject) historicalDataArrayJSON.get(i);
-       // ojbJSON.get("Symbol");
-        if(symbolCursor.getString(symbolCursor.getColumnIndex("symbol")).equals(ojbJSON.getString("Symbol"))) {
-          Log.d(LOG_TAG, "Symbol with compare: " + ojbJSON.getString("Symbol"));
+
+      //Iterate through each set of symbols, add to ContentValues and store in ArrayList
+      ContentValues values = new ContentValues();
+
+      int i = 0;
+      for(int j = 0; j < historicalDataArrayJSON.length(); j++) {
+        JSONObject ojbJSON = (JSONObject) historicalDataArrayJSON.get(j);
+        if (symbolArrayList.get(i).equals(ojbJSON.getString("Symbol"))){
+          newHistoricalDataJSONArray.put(ojbJSON);
         }else{
-          symbolCursor.moveToNext();
+          i++;
+          values.put(QuoteColumns.HISTORICALDATA, newHistoricalDataJSONArray.toString());
+          Log.v(LOG_TAG, "historical data instance :" + newHistoricalDataJSONArray.toString());
+          contentValuesArrayList.add(values);
+          values = new ContentValues();
+        }
+
+        if(j == historicalDataArrayJSON.length()-1){
+          values.put(QuoteColumns.HISTORICALDATA, newHistoricalDataJSONArray.toString());
+          Log.v(LOG_TAG, "historical data last instance :" + newHistoricalDataJSONArray.toString());
+          contentValuesArrayList.add(values);
         }
       }
+
     } catch (JSONException e) {
       e.printStackTrace();
     }
+    return contentValuesArrayList;
   }
 
 }

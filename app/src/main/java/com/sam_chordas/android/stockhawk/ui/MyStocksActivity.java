@@ -8,6 +8,7 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.os.Bundle;
@@ -57,6 +58,9 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     mContext = this;
+
+    final Uri contentUri = getIntent() != null ? getIntent().getData() : null;
+
     ConnectivityManager cm =
         (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -86,6 +90,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
               @Override public void onItemClick(View v, int position) {
                 //TODO: launch detail activity
                 Intent intent = new Intent(MyStocksActivity.this, StockDetailActivity.class);
+                mCursor.moveToPosition(position);
+                intent.putExtra("quote", mCursor.getString(mCursor.getColumnIndex("symbol")));
                 startActivity(intent);
               }
             }));

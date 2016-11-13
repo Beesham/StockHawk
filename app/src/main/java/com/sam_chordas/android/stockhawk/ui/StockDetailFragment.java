@@ -1,19 +1,38 @@
 package com.sam_chordas.android.stockhawk.ui;
 
 
-import android.app.LoaderManager;
-import android.content.Loader;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.res.TypedArrayUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.db.chart.model.LineSet;
-import com.db.chart.view.LineChartView;
-import com.sam_chordas.android.stockhawk.R;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.sam_chordas.android.stockhawk.R;
+import com.sam_chordas.android.stockhawk.data.QuoteColumns;
+import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static android.R.attr.data;
+import static android.R.attr.y;
 import static com.google.android.gms.common.stats.zzb.zza.FL;
 
 /**
@@ -22,7 +41,12 @@ import static com.google.android.gms.common.stats.zzb.zza.FL;
  */
 public class StockDetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private LineChartView mLineChartView;
+    private static String LOG_TAG = StockDetailFragment.class.getSimpleName();
+    static final String DETAIL_URI = "URI";
+
+    private static final int CURSOR_LOADER_ID = 1;
+
+    private LineChart mLineChartView;
 
     public StockDetailFragment() {
         // Required empty public constructor
@@ -34,28 +58,67 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
     }
 
     @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        getLoaderManager().initLoader(CURSOR_LOADER_ID, getArguments(), this);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView =  inflater.inflate(R.layout.fragment_stock_detail, container, false);
-        mLineChartView = (LineChartView) rootView.findViewById(R.id.linechart);
+        mLineChartView = (LineChart) rootView.findViewById(R.id.linechart);
 
-        String[] labels = {"9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm"};
+        Log.v(LOG_TAG, "Quote: " + getArguments().get("quote"));
 
-        LineSet dataset = new LineSet(labels, new float[] {1f,2f,3f,4f,4f,6f,7f,8f});
-        mLineChartView.addData(dataset);
-        mLineChartView.show();
+
 
         return  rootView;
     }
 
+
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return null;
+        return new CursorLoader(getContext(),
+                QuoteProvider.Quotes.CONTENT_URI,
+                new String[]{QuoteColumns._ID,
+                        QuoteColumns.SYMBOL,
+                        QuoteColumns.BIDPRICE,
+                        QuoteColumns.PERCENT_CHANGE,
+                        QuoteColumns.CHANGE,
+                        QuoteColumns.ISUP,
+                        QuoteColumns.HISTORICALDATA},
+                QuoteColumns.SYMBOL + " = ?",
+                new String[]{args.get("quote").toString()},
+                null);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if(data.moveToFirst()){
+            Log.v(LOG_TAG, "data: " + data.getString(data.getColumnIndex(QuoteColumns.HISTORICALDATA)));
+            ArrayList<Float> labels = new ArrayList<>();
+            List<Entry> values = new ArrayList<>();
+            int y=0;
+            try {
+                JSONArray historicalDataJSONArray = new JSONArray(data.getString(data.getColumnIndex(QuoteColumns.HISTORICALDATA)));
+                for(int i = 0; i < historicalDataJSONArray.length(); i++){
 
+                    //labels.add(y+1.0f);//((JSONObject) historicalDataJSONArray.get(i)).getString("Date"));
+                    values.add(new Entry(y++,Float.parseFloat(((JSONObject) historicalDataJSONArray.get(i)).getString("Close"))));
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            LineDataSet dataset = new LineDataSet(values, "Bid change");
+            dataset.setColor(getResources().getColor(R.color.white));
+
+            LineData lineData = new LineData(dataset);
+            mLineChartView.setData(lineData);
+            mLineChartView.invalidate();
+        }
     }
 
     @Override
