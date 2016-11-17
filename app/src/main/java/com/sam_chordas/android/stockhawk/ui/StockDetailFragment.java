@@ -9,8 +9,13 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.res.TypedArrayUtils;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -50,6 +55,7 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
 
     public StockDetailFragment() {
         // Required empty public constructor
+        hasOptionsMenu();
     }
 
     @Override
@@ -72,10 +78,22 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
         Log.v(LOG_TAG, "Quote: " + getArguments().get("quote"));
 
 
+        ActionBar ab = ((AppCompatActivity) getActivity()).getSupportActionBar();
+                ab.setDisplayHomeAsUpEnabled(true);
+                ab.setTitle(getArguments().get("quote").toString());
 
         return  rootView;
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -97,14 +115,11 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if(data.moveToFirst()){
             Log.v(LOG_TAG, "data: " + data.getString(data.getColumnIndex(QuoteColumns.HISTORICALDATA)));
-            ArrayList<Float> labels = new ArrayList<>();
             List<Entry> values = new ArrayList<>();
             int y=0;
             try {
                 JSONArray historicalDataJSONArray = new JSONArray(data.getString(data.getColumnIndex(QuoteColumns.HISTORICALDATA)));
                 for(int i = 0; i < historicalDataJSONArray.length(); i++){
-
-                    //labels.add(y+1.0f);//((JSONObject) historicalDataJSONArray.get(i)).getString("Date"));
                     values.add(new Entry(y++,Float.parseFloat(((JSONObject) historicalDataJSONArray.get(i)).getString("Close"))));
                 }
 

@@ -2,6 +2,7 @@ package com.sam_chordas.android.stockhawk.service;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
@@ -38,6 +39,8 @@ public class StockTaskService extends GcmTaskService{
   private Context mContext;
   private StringBuilder mStoredSymbols = new StringBuilder();
   private boolean isUpdate;
+
+  public static final String ACTION_DATA_UPDATED = "com.sam_chordas.android.stockhawk.ACTION_DATA_UPDATED";
 
   public StockTaskService(){}
 
@@ -142,7 +145,6 @@ public class StockTaskService extends GcmTaskService{
     if(!params.getTag().equals("init") && initQueryCursor != null) {
       initQueryCursor.moveToFirst();
       do{
-        Log.v(LOG_TAG, "adding symbols to list");
         symbolArrayList.add(
                 initQueryCursor.getString(
                         initQueryCursor.getColumnIndex("symbol")));
@@ -155,8 +157,11 @@ public class StockTaskService extends GcmTaskService{
       symbolArrayList.add(params.getExtras().getString("symbol"));
       String historicalDataJSONStr = queryForHistoricalData(params.getExtras().getString("symbol"));
       updateQuotesWithHistoricalData(Utils.quoteHistoricalDataToContentValues(historicalDataJSONStr, symbolArrayList), symbolArrayList);
-      Log.v(LOG_TAG, "historical data for stockInput: " + historicalDataJSONStr);
     }
+
+    Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED)
+            .setPackage(mContext.getPackageName());
+    mContext.sendBroadcast(dataUpdatedIntent);
 
     return result;
   }
@@ -173,7 +178,6 @@ public class StockTaskService extends GcmTaskService{
         urlStringBuilder.append(URLEncoder.encode(" and startDate = \"2016-11-01\" and endDate = \"2016-11-30\"", "UTF-8"));  //TODO: change dates
         urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
                 + "org%2Falltableswithkeys&callback=");
-        Log.d(LOG_TAG, "Historical data query: " + urlStringBuilder.toString());
       } catch (UnsupportedEncodingException e) {
         e.printStackTrace();
       }
@@ -196,13 +200,10 @@ public class StockTaskService extends GcmTaskService{
       try {
         urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
         urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.historicaldata where symbol in (", "UTF-8"));
-//        urlStringBuilder.append(URLEncoder.encode(stockInput.toString(), "UTF-8"));
         urlStringBuilder.append(URLEncoder.encode("\""+stockInput+"\")", "UTF-8"));
-        Log.v(LOG_TAG, "stockInput: " + stockInput.toString());
         urlStringBuilder.append(URLEncoder.encode(" and startDate = \"2009-09-11\" and endDate = \"2010-03-10\"", "UTF-8"));  //TODO: change dates
         urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
                 + "org%2Falltableswithkeys&callback=");
-        Log.d(LOG_TAG, "Historical data query: " + urlStringBuilder.toString());
       } catch (UnsupportedEncodingException e) {
         e.printStackTrace();
       }
@@ -221,7 +222,6 @@ public class StockTaskService extends GcmTaskService{
     Log.v(LOG_TAG, "Updating quotes with historical data, size of contentVlas" + contentValuesArrayList.size());
     int i = 0;
     for(ContentValues values : contentValuesArrayList) {
-      Log.v(LOG_TAG, "index: " + i);
       mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI,
               values,
               QuoteColumns.SYMBOL + "=?",
