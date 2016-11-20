@@ -21,13 +21,18 @@ import android.view.ViewGroup;
 
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+import com.sam_chordas.android.stockhawk.rest.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,14 +52,12 @@ import static com.google.android.gms.common.stats.zzb.zza.FL;
 public class StockDetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static String LOG_TAG = StockDetailFragment.class.getSimpleName();
-    static final String DETAIL_URI = "URI";
 
     private static final int CURSOR_LOADER_ID = 1;
 
     private LineChart mLineChartView;
 
     public StockDetailFragment() {
-        // Required empty public constructor
         hasOptionsMenu();
     }
 
@@ -74,9 +77,6 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
                              Bundle savedInstanceState) {
         View rootView =  inflater.inflate(R.layout.fragment_stock_detail, container, false);
         mLineChartView = (LineChart) rootView.findViewById(R.id.linechart);
-
-        Log.v(LOG_TAG, "Quote: " + getArguments().get("quote"));
-
 
         ActionBar ab = ((AppCompatActivity) getActivity()).getSupportActionBar();
                 ab.setDisplayHomeAsUpEnabled(true);
@@ -114,24 +114,38 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if(data.moveToFirst()){
-            Log.v(LOG_TAG, "data: " + data.getString(data.getColumnIndex(QuoteColumns.HISTORICALDATA)));
             List<Entry> values = new ArrayList<>();
+            ArrayList<String> xAxisLables = new ArrayList<>();
             int y=0;
             try {
-                JSONArray historicalDataJSONArray = new JSONArray(data.getString(data.getColumnIndex(QuoteColumns.HISTORICALDATA)));
+                JSONArray historicalDataJSONArray = (new JSONObject(data.getString(data.getColumnIndex(QuoteColumns.HISTORICALDATA)))).getJSONArray("series");
                 for(int i = 0; i < historicalDataJSONArray.length(); i++){
-                    values.add(new Entry(y++,Float.parseFloat(((JSONObject) historicalDataJSONArray.get(i)).getString("Close"))));
+                    JSONObject tickData = historicalDataJSONArray.getJSONObject(i);
+                    values.add(new Entry(y++,Float.parseFloat(tickData.getString("close"))));
+                    xAxisLables.add(Utils.formatDate(tickData.getLong("Timestamp")));
                 }
 
             } catch (JSONException e) {
                 e.printStackTrace();
             }
 
-            LineDataSet dataset = new LineDataSet(values, "Bid change");
+            LineDataSet dataset = new LineDataSet(values, "Change");
             dataset.setColor(getResources().getColor(R.color.white));
+            dataset.setDrawValues(false);
+            dataset.setHighlightEnabled(false);
+            dataset.setDrawCircles(false);
 
             LineData lineData = new LineData(dataset);
             mLineChartView.setData(lineData);
+            mLineChartView.getLegend().setEnabled(false);
+            mLineChartView.setDescription(null);
+
+            String[] xAxisLablesStrArr = new String[xAxisLables.size()];
+            XAxis xAxis = mLineChartView.getXAxis();
+            xAxis.setValueFormatter(new MyXAxisValueFormatter(xAxisLables.toArray(xAxisLablesStrArr)));
+            xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+
+            mLineChartView.getAxisRight().setDrawLabels(false);
             mLineChartView.invalidate();
         }
     }
@@ -139,5 +153,24 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
+    }
+
+    public class MyXAxisValueFormatter implements IAxisValueFormatter {
+
+        private String[] mValues;
+
+        public MyXAxisValueFormatter(String[] values) {
+            this.mValues = values;
+        }
+
+        @Override
+        public String getFormattedValue(float value, AxisBase axis) {
+            // "value" represents the position of the label on the axis (x or y)
+            return mValues[(int) value];
+        }
+
+        /** this is only needed if numbers are returned, else return 0 */
+        @Override
+        public int getDecimalDigits() { return 0; }
     }
 }

@@ -20,15 +20,15 @@
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:layout_weight="1"
-      android:gravity="start"
+      android:gravity="end"
       >
     <TextView
         android:id="@+id/bid_price"
         style="@style/BidPriceTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingStart="10sp"
-        android:paddingLeft="10sp"
+        android:layout_marginRight="10sp"
+        android:layout_marginEnd="10sp"
         tools:text="1000.00"
         />
     <TextView
@@ -39,6 +39,8 @@
         android:layout_height="wrap_content"
         android:paddingLeft="3dp"
         android:paddingRight="3dp"
+        android:paddingStart="3dp"
+        android:paddingEnd="3dp"
         tools:text="100%"
         />
   </LinearLayout>

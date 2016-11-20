@@ -1,6 +1,5 @@
 package com.sam_chordas.android.stockhawk.ui;
 
-import android.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,12 +16,11 @@ public class StockDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_stock_detail);
 
         String quote = getIntent().getStringExtra("quote");
-        Log.v("StockDetail", "quote: " + quote);
 
         if (savedInstanceState == null) {
 
             Bundle arguments = new Bundle();
-            arguments.putString("quote",getIntent().getStringExtra("quote"));
+            arguments.putString("quote", quote);
 
             StockDetailFragment detailFragment = new StockDetailFragment();
             if(detailFragment != null) {
@@ -32,10 +30,6 @@ public class StockDetailActivity extends AppCompatActivity {
                 getSupportFragmentManager().beginTransaction()
                         .add(R.id.stock_detail_fragment_container, detailFragment)
                         .commit();
-
-
-                //Being here means we are in animation mode
-                //supportPostponeEnterTransition();
             }
         }
     }

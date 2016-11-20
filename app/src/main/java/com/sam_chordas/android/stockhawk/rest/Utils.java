@@ -5,18 +5,26 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.text.TextUtils;
+import android.text.format.Time;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import static android.media.CamcorderProfile.get;
+import static com.squareup.okhttp.internal.http.HttpDate.format;
+import static java.text.DateFormat.getDateInstance;
 
 /**
  * Created by sam_chordas on 10/8/15.
@@ -108,40 +116,34 @@ public class Utils {
     return builder.build();
   }
 
-  public static ArrayList<ContentValues> quoteHistoricalDataToContentValues(String strJSON, ArrayList<String> symbolArrayList){
+  public static ArrayList<ContentValues> quoteHistoricalDataToContentValues(ArrayList<String> historicalData, ArrayList<String> symbolArrayList){
     ArrayList<ContentValues> contentValuesArrayList = new ArrayList<>();
-    JSONArray newHistoricalDataJSONArray = new JSONArray();
-    try {
-      JSONObject historicalDataJSON = new JSONObject(strJSON);
-      JSONArray historicalDataArrayJSON = historicalDataJSON.getJSONObject("query").getJSONObject("results").getJSONArray("quote");
+    for (String strJSON : historicalData) {
+      try {
+        JSONObject historicalDataJSON = new JSONObject(strJSON);
+        JSONObject meta = historicalDataJSON.getJSONObject("meta");
 
-      //Iterate through each set of symbols, add to ContentValues and store in ArrayList
-      ContentValues values = new ContentValues();
+        String symbol = meta.getString("ticker").toUpperCase();
 
-      int i = 0;
-      for(int j = 0; j < historicalDataArrayJSON.length(); j++) {
-        JSONObject ojbJSON = (JSONObject) historicalDataArrayJSON.get(j);
-        if (symbolArrayList.get(i).equals(ojbJSON.getString("Symbol"))){
-          newHistoricalDataJSONArray.put(ojbJSON);
-        }else{
-          i++;
-          values.put(QuoteColumns.HISTORICALDATA, newHistoricalDataJSONArray.toString());
-          Log.v(LOG_TAG, "historical data instance :" + newHistoricalDataJSONArray.toString());
-          contentValuesArrayList.add(values);
-          values = new ContentValues();
-        }
+        //Iterate through each set of symbols, add to ContentValues and store in ArrayList
+        ContentValues values = new ContentValues();
 
-        if(j == historicalDataArrayJSON.length()-1){
-          values.put(QuoteColumns.HISTORICALDATA, newHistoricalDataJSONArray.toString());
-          Log.v(LOG_TAG, "historical data last instance :" + newHistoricalDataJSONArray.toString());
-          contentValuesArrayList.add(values);
-        }
+          if (symbolArrayList.contains(symbol)) {
+            values.put(QuoteColumns.HISTORICALDATA, strJSON);
+            contentValuesArrayList.add(values);
+          }
+
+      } catch (JSONException e) {
+        e.printStackTrace();
       }
-
-    } catch (JSONException e) {
-      e.printStackTrace();
     }
     return contentValuesArrayList;
+  }
+
+  public static String formatDate(long dateInMillis) {
+    Date date = new Date(dateInMillis*1000);
+    SimpleDateFormat shortenedDateFormat = new SimpleDateFormat("h:mm a" + "");
+    return shortenedDateFormat.format(date);
   }
 
 }

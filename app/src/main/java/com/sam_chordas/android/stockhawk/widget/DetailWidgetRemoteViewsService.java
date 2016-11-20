@@ -126,11 +126,6 @@ public class DetailWidgetRemoteViewsService extends RemoteViewsService {
                 return views;
             }
 
-            @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
-            private void setRemoteContentDescription(RemoteViews views, String description) {
-                //views.setContentDescription(R.id.widget_icon, description);
-            }
-
             @Override
             public RemoteViews getLoadingView() {
                 return new RemoteViews(getPackageName(),

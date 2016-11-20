@@ -21,6 +21,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.sam_chordas.android.stockhawk.R;
@@ -54,13 +55,12 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   private Context mContext;
   private Cursor mCursor;
   boolean isConnected;
+  private TextView mEmptyView;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     mContext = this;
-
-    final Uri contentUri = getIntent() != null ? getIntent().getData() : null;
 
     ConnectivityManager cm =
         (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -81,15 +81,17 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         networkToast();
       }
     }
+
+    mEmptyView = (TextView) findViewById(R.id.empty_view);
+
     RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
     recyclerView.setLayoutManager(new LinearLayoutManager(this));
     getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
 
-    mCursorAdapter = new QuoteCursorAdapter(this, null);
+    mCursorAdapter = new QuoteCursorAdapter(this, null, mEmptyView);
     recyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(this,
             new RecyclerViewItemClickListener.OnItemClickListener() {
               @Override public void onItemClick(View v, int position) {
-                //TODO: launch detail activity
                 Intent intent = new Intent(MyStocksActivity.this, StockDetailActivity.class);
                 mCursor.moveToPosition(position);
                 intent.putExtra("quote", mCursor.getString(mCursor.getColumnIndex("symbol")));
@@ -143,7 +145,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
     mTitle = getTitle();
     if (isConnected){
-      long period = 30L; //3600 TODO: change this back
+      long period = 3600L;
       long flex = 10L;
       String periodicTag = "periodic";
 
@@ -162,7 +164,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
       GcmNetworkManager.getInstance(this).schedule(periodicTask);
     }
   }
-
 
   @Override
   public void onResume() {
@@ -228,6 +229,12 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   public void onLoadFinished(Loader<Cursor> loader, Cursor data){
     mCursorAdapter.swapCursor(data);
     mCursor = data;
+
+    if(!isConnected){
+      if(mEmptyView != null) {
+        mEmptyView.setText(getString(R.string.no_connectivity));
+      }
+    }
   }
 
   @Override

@@ -23,4 +23,7 @@
   <!-- Detail Widget Strings -->
   <string name="title_widget_detail" translatable="true">Stock Hawk Details</string>
 
+  <!-- No Connectivity Message -->
+  <string name="no_connectivity" translatable="true">Unable to get stocks information.Please check your connection</string>
+
 </resources>
