@@ -123,7 +123,6 @@ public class StockTaskService extends GcmTaskService{
       urlString = urlStringBuilder.toString();
       try{
         getResponse = fetchData(urlString);
-        Log.d(LOG_TAG, "Url: " + urlString);
         result = GcmNetworkManager.RESULT_SUCCESS;
         try {
           ContentValues contentValues = new ContentValues();
@@ -144,8 +143,13 @@ public class StockTaskService extends GcmTaskService{
     }
 
     ArrayList<String> symbolArrayList = new ArrayList<>();
-    if(params.getTag().equals("init") && initQueryCursor.getCount() != 0) {
-      Log.v(LOG_TAG, "Querying for init quotes");
+    if(params.getTag().equals("init")) {
+      if(initQueryCursor.getCount() == 0){
+        initQueryCursor = mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
+                new String[] { "Distinct " + QuoteColumns.SYMBOL }, null,
+                null, null);
+      }
+
       initQueryCursor.moveToFirst();
       do{
         symbolArrayList.add(
@@ -154,12 +158,11 @@ public class StockTaskService extends GcmTaskService{
       }while(initQueryCursor.moveToNext());
 
       ArrayList<String> historicalData = queryForHistoricalData(symbolArrayList);
-      //Utils.quoteHistoricalDataToContentValues(historicalData, symbolArrayList);
       updateQuotesWithHistoricalData(Utils.quoteHistoricalDataToContentValues(historicalData, symbolArrayList), symbolArrayList);
     }else if (params.getTag().equals("add")){
       symbolArrayList.add(params.getExtras().getString("symbol"));
-      //String historicalDataJSONStr = queryForHistoricalData(params.getExtras().getString("symbol"));
-      //updateQuotesWithHistoricalData(Utils.quoteHistoricalDataToContentValues(historicalDataJSONStr, symbolArrayList), symbolArrayList);
+      ArrayList<String> historicalDataJSONStr = queryForHistoricalData(symbolArrayList);
+      updateQuotesWithHistoricalData(Utils.quoteHistoricalDataToContentValues(historicalDataJSONStr, symbolArrayList), symbolArrayList);
     }
 
     Intent dataUpdatedIntent = new Intent(ACTION_DATA_UPDATED)
@@ -170,7 +173,7 @@ public class StockTaskService extends GcmTaskService{
   }
 
   private ArrayList<String> queryForHistoricalData(ArrayList<String> symbolArrayList){
-    String getResponse = null;
+    String getResponse;
     ArrayList<String> historicalData = new ArrayList<>();
 
     for(String symbol : symbolArrayList) {
@@ -199,33 +202,6 @@ public class StockTaskService extends GcmTaskService{
     return historicalData;
   }
 
-  /*private String queryForHistoricalData(String stockInput){
-    StringBuilder urlStringBuilder = new StringBuilder();
-    String getResponse = null;
-    if(urlStringBuilder != null){
-
-      try {
-        urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
-        urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.historicaldata where symbol in (", "UTF-8"));
-        urlStringBuilder.append(URLEncoder.encode("\""+stockInput+"\")", "UTF-8"));
-        urlStringBuilder.append(URLEncoder.encode(" and startDate = \"2010-09-11\" and endDate = \"2011-09-11\"", "UTF-8"));  //TODO: change dates
-        urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
-                + "org%2Falltableswithkeys&callback=");
-      } catch (UnsupportedEncodingException e) {
-        e.printStackTrace();
-      }
-
-      String urlString = urlStringBuilder.toString();
-      Log.v(LOG_TAG, "historical data query: " + urlString);
-      try {
-        getResponse = fetchData(urlString);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-    return getResponse;
-  }
-*/
   private void updateQuotesWithHistoricalData(ArrayList<ContentValues> contentValuesArrayList, ArrayList<String> symbolArrayList){
     Log.v(LOG_TAG, "Updating quotes with historical data, size of contentVlas" + contentValuesArrayList.size());
     int i = 0;

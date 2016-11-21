@@ -2,18 +2,11 @@ package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.text.TextUtils;
-import android.text.format.Time;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -21,10 +14,6 @@ import java.util.Date;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import static android.media.CamcorderProfile.get;
-import static com.squareup.okhttp.internal.http.HttpDate.format;
-import static java.text.DateFormat.getDateInstance;
 
 /**
  * Created by sam_chordas on 10/8/15.
@@ -127,7 +116,7 @@ public class Utils {
 
         //Iterate through each set of symbols, add to ContentValues and store in ArrayList
         ContentValues values = new ContentValues();
-
+          String sym = symbolArrayList.get(0);
           if (symbolArrayList.contains(symbol)) {
             values.put(QuoteColumns.HISTORICALDATA, strJSON);
             contentValuesArrayList.add(values);
@@ -137,6 +126,7 @@ public class Utils {
         e.printStackTrace();
       }
     }
+    Log.v(LOG_TAG, "content value size: " + contentValuesArrayList.size());
     return contentValuesArrayList;
   }
 
