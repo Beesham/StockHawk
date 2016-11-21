@@ -26,4 +26,7 @@
   <!-- No Connectivity Message -->
   <string name="no_connectivity" translatable="true">Unable to get stocks information.Please check your connection</string>
 
+  <!-- Stock already exists -->
+  <string name="stock_exists" translatable="true">This stock is already saved!</string>
+
 </resources>

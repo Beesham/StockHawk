@@ -184,15 +184,13 @@ public class StockTaskService extends GcmTaskService{
 
         urlStringBuilder.append("http://chartapi.finance.yahoo.com/instrument/1.0/");
         urlStringBuilder.append(symbol);
-        urlStringBuilder.append("/chartdata;type=quote;range=1d/json");  //TODO
+        urlStringBuilder.append("/chartdata;type=quote;range=1d/json");
         String urlString = urlStringBuilder.toString();
         try {
           getResponse = fetchData(urlString)
                   .replaceAll("\\(","")
                   .replaceAll("\\)","")
                   .replaceFirst("finance_charts_json_callback", "");
-          Log.v(LOG_TAG, "historical data url: " + urlString);
-          Log.v(LOG_TAG, "historical data: " + getResponse);
           historicalData.add(getResponse);
         } catch (IOException e) {
           e.printStackTrace();
@@ -203,7 +201,6 @@ public class StockTaskService extends GcmTaskService{
   }
 
   private void updateQuotesWithHistoricalData(ArrayList<ContentValues> contentValuesArrayList, ArrayList<String> symbolArrayList){
-    Log.v(LOG_TAG, "Updating quotes with historical data, size of contentVlas" + contentValuesArrayList.size());
     int i = 0;
     for(ContentValues values : contentValuesArrayList) {
       mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI,

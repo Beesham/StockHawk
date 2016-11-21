@@ -24,7 +24,6 @@ public class StockDetailActivity extends AppCompatActivity {
 
             StockDetailFragment detailFragment = new StockDetailFragment();
             if(detailFragment != null) {
-                Log.v(LOG_TAG, "fragment exists");
                 detailFragment.setArguments(arguments);
 
                 getSupportFragmentManager().beginTransaction()
